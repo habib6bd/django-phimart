@@ -4,11 +4,18 @@ from product.models import Product, Category, Review
 from product.serializers import ProductSerializer, CategorySerializer, ReviewSerializer
 from django.db.models import Count
 from rest_framework.viewsets import ModelViewSet
+from django_filters.rest_framework import DjangoFilterBackend
+from product.filters import ProductFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 # Create your views here.
 
 class ProductViewSet(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = ProductFilter
+    search_fields = ['name', 'description', 'category__name']
+    ordering_fields = ['price', 'updated_at']
     
     def destroy(self, request, *args, **kwargs):
         product = self.get_object()
