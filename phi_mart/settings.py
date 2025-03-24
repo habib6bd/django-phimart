@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'api',
     'users',
     'product',
+    'order',
     "debug_toolbar"
 
 ]
