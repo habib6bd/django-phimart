@@ -8,6 +8,11 @@ class SimpleProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = ['id', 'name', 'price']
 
+class AddCartItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product_id', 'quantity']
+
 class CartItemSerializer(serializers.ModelSerializer):
     product = SimpleProductSerializer()
     total_price = serializers.SerializerMethodField(method_name='get_total_price')
