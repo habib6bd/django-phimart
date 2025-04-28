@@ -1,5 +1,6 @@
 event_env/
 __pycache__/
+token.json
 db.sqlite3
 node_modules/
 .env
