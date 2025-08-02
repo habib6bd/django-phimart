@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from order.models import Cart, CartItem
+from order.models import Cart, CartItem, Order, OrderItem
 from product.models import Product
 from product.serializers import ProductSerializer
 
@@ -55,7 +55,45 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ['id', 'user', 'items', 'total_price']
+        read_only_fields = ['user']
     
     def get_total_price(self, cart: Cart):
         return sum([item.product.price * item.quantity for item in cart.items.all()])
-       
+ 
+class CreateOrderSerializer(serializers.Serializer):
+    cart_id = serializers.UUIDField()
+
+    def validate_cart_id(self, cart_id):
+        if not Cart.objects.filter(pk=cart_id).exists():
+            raise serializers.ValidationError("No cart found with this id")
+
+        if not CartItem.objects.filter(cart_id=cart_id).exists():
+            raise serializers.ValidationError("Cart is empty")
+        
+        return cart_id
+
+    def create(self, validated_data):
+        cart = Cart.objects.get(id=validated_data['cart_id'])
+        order = Order.objects.create(user=cart.user, total_price=cart.total_price)
+        for item in cart.items.all():
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+                price=item.product.price,
+                total_price=item.quantity * item.product.price
+            )
+        return order
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = SimpleProductSerializer()
+    class Meta:
+        model = OrderItem
+        fields = ['id', 'product', 'price', 'quantity', 'total_price']
+
+class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+    class Meta:
+        model = Order
+        fields = ['id', 'user', 'status', 'total_price', 'created_at', 'items']
+        
